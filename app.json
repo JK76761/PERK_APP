@@ -45,6 +45,7 @@
       ]
     ],
     "experiments": {
+      "baseUrl": "/PERK_APP",
       "typedRoutes": true,
       "reactCompiler": true
     }
