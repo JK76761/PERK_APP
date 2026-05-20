@@ -8,7 +8,7 @@ import { spacing } from '@/constants/spacing';
 import { shadows } from '@/constants/shadows';
 import { fontWeights } from '@/constants/typography';
 import type { CategoryTone } from '@/data/categories';
-import type { Perk } from '@/data/perks';
+import type { Perk } from '@/types/perk';
 
 type PerkDetailHeroProps = {
   perk: Perk;
@@ -23,7 +23,12 @@ export function PerkDetailHero({ perk, categoryLabel, categoryTone }: PerkDetail
   return (
     <View style={styles.container}>
       <View style={styles.accentBlob} />
-      <BrandLogo company={perk.company} logoKey={perk.logoKey} variant="detail" />
+      <BrandLogo
+        company={perk.company}
+        logoKey={perk.logoKey}
+        logoDomain={perk.logoDomain}
+        variant="detail"
+      />
 
       <View style={[styles.categoryPill, { backgroundColor: tone.background }]}> 
         <FontAwesome5 name="sparkles" size={12} color={tone.icon} />

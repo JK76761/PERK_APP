@@ -10,6 +10,7 @@ create table if not exists public.perks (
   savings_value text,
   logo_type text,
   logo_key text,
+  logo_domain text,
   description text not null,
   how_to_claim text[] not null default '{}',
   terms text[] not null default '{}',
@@ -26,6 +27,8 @@ create table if not exists public.perks (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.perks add column if not exists logo_domain text;
 
 alter table public.perks enable row level security;
 

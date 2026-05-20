@@ -1,5 +1,5 @@
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { AnimatedScalePressable } from '@/components/AnimatedScalePressable';
 import { categoryToneColors, colors } from '@/constants/colors';
@@ -8,18 +8,20 @@ import { clampSize } from '@/constants/spacing';
 import { fontWeights } from '@/constants/typography';
 import type { Category, CategoryIcon as CategoryIconName } from '@/data/categories';
 
-const { width } = Dimensions.get('window');
-const contentWidth = width - clampSize(width, 36, 44, 0.104);
-const itemWidth = contentWidth / 6;
-const iconBoxSize = clampSize(width, 42, 46, 0.114);
-const iconSize = iconBoxSize * 0.5;
-
 type CategoryButtonProps = {
   category: Category;
   onPress?: () => void;
 };
 
-function CategoryIcon({ kind, color }: { kind: CategoryIconName; color: string }) {
+function CategoryIcon({
+  kind,
+  color,
+  iconSize,
+}: {
+  kind: CategoryIconName;
+  color: string;
+  iconSize: number;
+}) {
   if (kind === 'banking') {
     return <FontAwesome5 name="university" size={iconSize} color={color} />;
   }
@@ -44,6 +46,10 @@ function CategoryIcon({ kind, color }: { kind: CategoryIconName; color: string }
     return <Ionicons name="sparkles" size={iconSize + 2} color={color} />;
   }
 
+  if (kind === 'research') {
+    return <Ionicons name="cash-outline" size={iconSize + 2} color={color} />;
+  }
+
   if (kind === 'shopping') {
     return <Ionicons name="bag-handle" size={iconSize + 1} color={color} />;
   }
@@ -53,14 +59,39 @@ function CategoryIcon({ kind, color }: { kind: CategoryIconName; color: string }
 
 // Category chip used in the browse row.
 export function CategoryButton({ category, onPress }: CategoryButtonProps) {
+  const { width } = useWindowDimensions();
   const tone = categoryToneColors[category.tone];
+  const contentWidth = width - clampSize(width, 36, 44, 0.104);
+  const itemWidth = contentWidth / 6;
+  const iconBoxSize = clampSize(width, 42, 46, 0.114);
+  const iconSize = iconBoxSize * 0.5;
+  const labelSize = clampSize(width, 10.5, 11.5, 0.029);
 
   return (
-    <AnimatedScalePressable onPress={onPress} contentStyle={styles.container} scaleTo={0.965}>
-      <View style={[styles.iconBox, { backgroundColor: tone.background }]}>
-        <CategoryIcon kind={category.icon} color={tone.icon} />
+    <AnimatedScalePressable
+      onPress={onPress}
+      contentStyle={[styles.container, { width: itemWidth }]}
+      scaleTo={0.965}>
+      <View
+        style={[
+          styles.iconBox,
+          {
+            width: iconBoxSize,
+            height: iconBoxSize,
+            backgroundColor: tone.background,
+          },
+        ]}>
+        <CategoryIcon kind={category.icon} color={tone.icon} iconSize={iconSize} />
       </View>
-      <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit>
+      <Text
+        style={[
+          styles.label,
+          {
+            width: itemWidth,
+            fontSize: labelSize,
+          },
+        ]}
+        numberOfLines={2}>
         {category.label}
       </Text>
     </AnimatedScalePressable>
@@ -69,26 +100,23 @@ export function CategoryButton({ category, onPress }: CategoryButtonProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: itemWidth,
-    minHeight: 72,
+    minHeight: 82,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
   iconBox: {
-    width: iconBoxSize,
-    height: iconBoxSize,
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   label: {
-    width: itemWidth + 12,
+    minHeight: 30,
     color: colors.textSoft,
     textAlign: 'center',
-    fontSize: clampSize(width, 11, 12, 0.03),
-    fontWeight: fontWeights.bold,
-    letterSpacing: -0.25,
+    fontWeight: fontWeights.semibold,
+    letterSpacing: -0.18,
     lineHeight: 14,
+    flexShrink: 1,
   },
 });

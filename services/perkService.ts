@@ -30,7 +30,7 @@ export async function fetchPerks(): Promise<FetchPerksResult> {
     const { data, error } = await supabase
       .from('perks')
       .select(
-        'id, company, title, subtitle, category, badge_text, badge_tone, expiry_text, savings_value, logo_type, logo_key, description, how_to_claim, terms, external_url, source_url, verified_at, expires_at, is_verified, region, student_only, provider, is_featured, is_trending'
+        'id, company, title, subtitle, category, badge_text, badge_tone, expiry_text, savings_value, logo_type, logo_key, logo_domain, description, how_to_claim, terms, external_url, source_url, verified_at, expires_at, is_verified, region, student_only, provider, is_featured, is_trending'
       )
       .eq('is_verified', true)
       .order('expires_at', { ascending: true, nullsFirst: false });

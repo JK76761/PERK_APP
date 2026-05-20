@@ -6,10 +6,15 @@ export type PerkCategory = CategoryId;
 export type PerkLogoType =
   | 'bank'
   | 'banking'
+  | 'cloud'
   | 'code'
   | 'design'
+  | 'domain'
+  | 'education'
+  | 'food'
   | 'github'
   | 'mobile'
+  | 'research'
   | 'shopping'
   | 'spotify'
   | 'student'
@@ -29,6 +34,7 @@ export type Perk = {
   savingsValue?: string;
   logoType?: PerkLogoType;
   logoKey?: BrandLogoKey;
+  logoDomain?: string;
   description: string;
   howToClaim: string[];
   terms: string[];

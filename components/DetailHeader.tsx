@@ -12,10 +12,11 @@ import { useSavedPerks } from '@/state/SavedPerksContext';
 type DetailHeaderProps = {
   onBack: () => void;
   perkId: string;
+  onShare?: () => void;
 };
 
 // Top action row used on the perk detail screen.
-export function DetailHeader({ onBack, perkId }: DetailHeaderProps) {
+export function DetailHeader({ onBack, perkId, onShare }: DetailHeaderProps) {
   const { isSaved, toggleSaved } = useSavedPerks();
   const saved = isSaved(perkId);
   const bookmarkScale = useRef(new Animated.Value(1)).current;
@@ -58,7 +59,7 @@ export function DetailHeader({ onBack, perkId }: DetailHeaderProps) {
             />
           </Animated.View>
         </Pressable>
-        <AnimatedScalePressable contentStyle={styles.iconButton} scaleTo={0.94}>
+        <AnimatedScalePressable onPress={onShare} contentStyle={styles.iconButton} scaleTo={0.94}>
           <Ionicons name="share-social-outline" size={21} color={colors.text} />
         </AnimatedScalePressable>
       </View>

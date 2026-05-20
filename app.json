@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "perk",
+    "name": "Perk",
     "slug": "perk",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,9 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jk76761.perk",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.jk76761.perk",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -23,6 +26,7 @@
     },
     "web": {
       "output": "static",
+      "name": "Perk",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [

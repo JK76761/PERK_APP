@@ -3,13 +3,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
-  Dimensions,
   Linking,
   Pressable,
+  Share,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,9 +28,9 @@ import { shadows } from '@/constants/shadows';
 import { fontWeights } from '@/constants/typography';
 import { categories } from '@/data/categories';
 import { usePerks } from '@/hooks/usePerks';
-
-const { width } = Dimensions.get('window');
-const horizontalPadding = clampSize(width, spacing.screenMin, spacing.screenMax, 0.05);
+import { useAppPreferences } from '@/state/AppPreferencesContext';
+import { getSimilarPerks, getWhyUsefulLines } from '@/utils/perkDiscovery';
+import { openSupportMail } from '@/utils/support';
 
 function SummaryCard({
   icon,
@@ -78,11 +79,14 @@ function getSourceHost(url: string) {
 }
 
 export default function PerkDetailScreen() {
+  const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [openingLink, setOpeningLink] = useState(false);
   const { perks, loading } = usePerks();
+  const { preferences } = useAppPreferences();
+  const horizontalPadding = clampSize(width, spacing.screenMin, spacing.screenMax, 0.05);
   const perk = id ? perks.find((item) => item.id === id) : undefined;
 
   if (loading && !perk) {
@@ -101,14 +105,22 @@ export default function PerkDetailScreen() {
     );
   }
 
-  const category = categories.find((item) => item.id === perk.category);
+  const currentPerk = perk;
+
+  const category = categories.find((item) => item.id === currentPerk.category);
   const categoryLabel = category?.label ?? 'Perk';
   const categoryTone = category?.tone ?? 'purple';
-  const externalUrl = perk.externalUrl ?? '';
-  const sourceUrl = perk.sourceUrl ?? '';
+  const externalUrl = currentPerk.externalUrl ?? '';
+  const sourceUrl = currentPerk.sourceUrl ?? '';
   const hasExternalUrl = externalUrl.length > 0;
-  const verifiedDateLabel = formatVerifiedDate(perk.verifiedAt);
+  const verifiedDateLabel = formatVerifiedDate(currentPerk.verifiedAt);
   const sourceHost = getSourceHost(sourceUrl);
+  const whyUsefulLines = getWhyUsefulLines(currentPerk, preferences.audience);
+  const similarPerks = getSimilarPerks(
+    perks.filter((item) => item.isVerified),
+    currentPerk,
+    3
+  );
 
   async function openLink(url: string, useLoadingState = false) {
     if (!url || (useLoadingState && openingLink)) {
@@ -145,6 +157,43 @@ export default function PerkDetailScreen() {
     await openLink(sourceUrl);
   }
 
+  async function handleReportOutdated() {
+    await openSupportMail(
+      `Outdated offer report: ${currentPerk.title}`,
+      `Hi Perk,\n\nI want to report a possibly outdated offer.\n\nPerk: ${currentPerk.title}\nProvider: ${currentPerk.provider}\nPerk ID: ${currentPerk.id}\nOfficial source: ${currentPerk.sourceUrl}\n\nWhat looks wrong:\n- \n\nThanks.`
+    );
+  }
+
+  async function handleRequestSimilar() {
+    await openSupportMail(
+      `Perk request: more offers like ${currentPerk.company}`,
+      `Hi Perk,\n\nI want to request more perks like this one.\n\nCurrent perk: ${currentPerk.title}\nProvider: ${currentPerk.provider}\nWhy it is useful:\n- \n\nRequested brand or category:\n- \n\nThanks.`
+    );
+  }
+
+  async function handleShare() {
+    const shareUrl = externalUrl || sourceUrl;
+    const summaryLine = currentPerk.subtitle || currentPerk.badgeText || currentPerk.savingsValue;
+    const shareMessage = [
+      `${currentPerk.title} — ${currentPerk.company}`,
+      summaryLine,
+      shareUrl ? `Official link: ${shareUrl}` : null,
+      'Shared from Perk',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    try {
+      await Share.share({
+        message: shareMessage,
+        url: shareUrl || undefined,
+        title: currentPerk.title,
+      });
+    } catch {
+      Alert.alert('Unable to share this perk right now.');
+    }
+  }
+
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -152,24 +201,45 @@ export default function PerkDetailScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
+            paddingHorizontal: horizontalPadding,
             paddingTop: insets.top + spacing.sm,
             paddingBottom: insets.bottom + spacing.detailBottomPadding,
           },
         ]}>
-        <DetailHeader onBack={() => router.back()} perkId={perk.id} />
+        <DetailHeader
+          onBack={() => router.back()}
+          perkId={currentPerk.id}
+          onShare={() => {
+            void handleShare();
+          }}
+        />
 
-        <PerkDetailHero perk={perk} categoryLabel={categoryLabel} categoryTone={categoryTone} />
+        <PerkDetailHero
+          perk={currentPerk}
+          categoryLabel={categoryLabel}
+          categoryTone={categoryTone}
+        />
 
         <View style={styles.summaryRow}>
-          <SummaryCard icon="cash-outline" label="Savings" value={perk.savingsValue ?? perk.badgeText ?? 'Available'} tone="green" />
-          <SummaryCard icon="time-outline" label="Expires" value={perk.expiryText ?? 'Ongoing'} tone="orange" />
+          <SummaryCard
+            icon="cash-outline"
+            label="Savings"
+            value={currentPerk.savingsValue ?? currentPerk.badgeText ?? 'Available'}
+            tone="green"
+          />
+          <SummaryCard
+            icon="time-outline"
+            label="Expires"
+            value={currentPerk.expiryText ?? 'Ongoing'}
+            tone="orange"
+          />
         </View>
 
         <View style={styles.section}>
           <SectionHeader title="Verified" />
           <View style={styles.verificationCard}>
             <View style={styles.verificationTopRow}>
-              {perk.isVerified ? (
+              {currentPerk.isVerified ? (
                 <TrustBadge tone="verified" label="Verified source" />
               ) : null}
               <Text style={styles.verifiedDate}>Checked {verifiedDateLabel}</Text>
@@ -178,13 +248,20 @@ export default function PerkDetailScreen() {
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
                 <Text style={styles.metaLabel}>Region</Text>
-                <Text style={styles.metaValue}>{perk.region}</Text>
+                <Text style={styles.metaValue}>{currentPerk.region}</Text>
               </View>
               <View style={styles.metaItem}>
                 <Text style={styles.metaLabel}>Eligibility</Text>
-                <Text style={styles.metaValue}>{perk.studentOnly ? 'Students only' : 'Public or mixed offer'}</Text>
+                <Text style={styles.metaValue}>
+                  {currentPerk.studentOnly ? 'Students only' : 'Public or mixed offer'}
+                </Text>
               </View>
             </View>
+
+            <Text style={styles.verifyNote}>
+              Provider pricing, eligibility, and availability can change. Always confirm the
+              official source before acting on an offer.
+            </Text>
 
             <Pressable
               onPress={handleOpenSource}
@@ -193,31 +270,88 @@ export default function PerkDetailScreen() {
               <View style={styles.sourceTextWrap}>
                 <Text style={styles.metaLabel}>Official source</Text>
                 <Text style={styles.sourceValue} numberOfLines={1}>
-                  {perk.provider} · {sourceHost}
+                  {currentPerk.provider} · {sourceHost}
                 </Text>
               </View>
               <Ionicons name="open-outline" size={18} color={colors.chevron} />
             </Pressable>
+
+            <View style={styles.supportActions}>
+              <Pressable
+                onPress={handleReportOutdated}
+                hitSlop={8}
+                style={({ pressed }) => [styles.inlineAction, pressed ? styles.sourceRowPressed : null]}>
+                <Text style={styles.inlineActionLabel}>Report outdated offer</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleRequestSimilar}
+                hitSlop={8}
+                style={({ pressed }) => [styles.inlineAction, pressed ? styles.sourceRowPressed : null]}>
+                <Text style={styles.inlineActionLabel}>Request similar perk</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
+        {whyUsefulLines.length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeader title="Why this is useful" />
+            <View style={styles.whyUsefulCard}>
+              {whyUsefulLines.map((line) => (
+                <View key={line} style={styles.reasonRow}>
+                  <View style={styles.reasonDot} />
+                  <Text style={styles.reasonText}>{line}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.section}>
           <SectionHeader title="How to claim" />
-          {perk.howToClaim.map((step, index) => (
-            <HowToClaimStep key={`${perk.id}-${index + 1}`} stepNumber={index + 1} text={step} />
+          {currentPerk.howToClaim.map((step, index) => (
+            <HowToClaimStep
+              key={`${currentPerk.id}-${index + 1}`}
+              stepNumber={index + 1}
+              text={step}
+            />
           ))}
         </View>
 
         <View style={styles.section}>
           <SectionHeader title="Terms" />
-          <TermsCard terms={perk.terms} />
+          <TermsCard terms={currentPerk.terms} />
         </View>
+
+        {similarPerks.length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeader title="Similar perks" />
+            <View style={styles.similarList}>
+              {similarPerks.map((similarPerk) => (
+                <Pressable
+                  key={similarPerk.id}
+                  onPress={() => router.push({ pathname: '/perk/[id]', params: { id: similarPerk.id } })}
+                  style={({ pressed }) => [styles.similarCard, pressed ? styles.sourceRowPressed : null]}>
+                  <Text style={styles.similarCompany}>{similarPerk.company}</Text>
+                  <Text style={styles.similarTitle} numberOfLines={2}>
+                    {similarPerk.title}
+                  </Text>
+                  <Text style={styles.similarMeta} numberOfLines={1}>
+                    {similarPerk.badgeText ?? similarPerk.savingsValue ?? similarPerk.expiryText ?? 'Verified offer'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View
         style={[
           styles.buttonBar,
           {
+            left: horizontalPadding,
+            right: horizontalPadding,
             paddingBottom: Math.max(insets.bottom + spacing.xs, spacing.md),
           },
         ]}>
@@ -238,7 +372,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingHorizontal: horizontalPadding,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -297,6 +430,7 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.md,
     marginBottom: spacing.md,
   },
@@ -344,10 +478,89 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     letterSpacing: -0.2,
   },
+  verifyNote: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
+  supportActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  inlineAction: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FAFBFD',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+  },
+  inlineActionLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    letterSpacing: -0.2,
+  },
+  whyUsefulCard: {
+    borderRadius: radius.xxl,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    ...shadows.card,
+  },
+  reasonRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  reasonDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.lime,
+    marginTop: 6,
+  },
+  reasonText: {
+    flex: 1,
+    color: colors.textSoft,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  similarList: {
+    gap: spacing.sm,
+  },
+  similarCard: {
+    borderRadius: radius.xl,
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    ...shadows.subtle,
+  },
+  similarCompany: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
+    marginBottom: spacing.xs,
+  },
+  similarTitle: {
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: fontWeights.semibold,
+    letterSpacing: -0.3,
+  },
+  similarMeta: {
+    color: colors.textSoft,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: spacing.sm,
+  },
   buttonBar: {
     position: 'absolute',
-    left: horizontalPadding,
-    right: horizontalPadding,
     bottom: 0,
     paddingTop: spacing.md,
     paddingHorizontal: spacing.xs,

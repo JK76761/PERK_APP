@@ -58,7 +58,9 @@ export function TrustBadge({
   return (
     <View style={[styles.badge, { backgroundColor: toneStyle.backgroundColor }]}>
       <Ionicons name={toneStyle.icon} size={12} color={toneStyle.iconColor} />
-      <Text style={[styles.label, { color: toneStyle.textColor }]}>{label}</Text>
+      <Text style={[styles.label, { color: toneStyle.textColor }]} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -66,6 +68,7 @@ export function TrustBadge({
 const styles = StyleSheet.create({
   badge: {
     minHeight: 26,
+    maxWidth: '100%',
     borderRadius: radius.full,
     flexDirection: 'row',
     alignItems: 'center',
@@ -77,5 +80,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: fontWeights.medium,
     letterSpacing: -0.15,
+    flexShrink: 1,
   },
 });

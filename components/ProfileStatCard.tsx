@@ -6,13 +6,26 @@ import { spacing } from '@/constants/spacing';
 import { shadows } from '@/constants/shadows';
 import { fontWeights } from '@/constants/typography';
 
-// Small profile card that highlights the user's savings summary.
-export function ProfileStatCard() {
+type ProfileStatCardProps = {
+  savedCount: number;
+  activeCount: number;
+  verifiedCount: number;
+};
+
+// Small profile card that highlights the current on-device summary.
+export function ProfileStatCard({
+  savedCount,
+  activeCount,
+  verifiedCount,
+}: ProfileStatCardProps) {
   return (
     <View style={styles.card}>
-      <Text style={styles.value}>$240+</Text>
-      <Text style={styles.label}>Potential monthly savings</Text>
-      <Text style={styles.support}>12 active perks discovered</Text>
+      <Text style={styles.value}>{savedCount}</Text>
+      <Text style={styles.label}>Saved perks on this device</Text>
+      <Text style={styles.support}>
+        {activeCount} active verified offers available right now, from {verifiedCount} verified
+        listings.
+      </Text>
     </View>
   );
 }
@@ -37,6 +50,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     letterSpacing: -0.2,
     marginBottom: spacing.xs,
+    lineHeight: 20,
   },
   support: {
     color: colors.textSoft,

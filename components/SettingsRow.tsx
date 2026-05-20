@@ -22,7 +22,7 @@ export function SettingsRow({ label, value, onPress }: SettingsRowProps) {
         <Text style={styles.label}>{label}</Text>
         {value ? <Text style={styles.value}>{value}</Text> : null}
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.chevron} />
+      {onPress ? <Ionicons name="chevron-forward" size={18} color={colors.chevron} /> : null}
     </AnimatedScalePressable>
   );
 }
@@ -42,17 +42,22 @@ const styles = StyleSheet.create({
   textWrap: {
     flex: 1,
     paddingRight: spacing.md,
+    minWidth: 0,
   },
   label: {
     color: colors.text,
     fontSize: 15,
     fontWeight: fontWeights.medium,
     letterSpacing: -0.2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   value: {
     color: colors.textSoft,
     fontSize: 13,
     fontWeight: fontWeights.regular,
     marginTop: spacing.xs,
+    lineHeight: 18,
+    flexShrink: 1,
   },
 });

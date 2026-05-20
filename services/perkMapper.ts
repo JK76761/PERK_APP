@@ -14,6 +14,7 @@ export type PerkRow = {
   savings_value: string | null;
   logo_type: string | null;
   logo_key: string | null;
+  logo_domain: string | null;
   description: string;
   how_to_claim: string[];
   terms: string[];
@@ -42,6 +43,7 @@ export function mapPerkRowToPerk(row: PerkRow): Perk {
     savingsValue: row.savings_value ?? undefined,
     logoType: (row.logo_type as PerkLogoType | null) ?? undefined,
     logoKey: (row.logo_key as BrandLogoKey | null) ?? undefined,
+    logoDomain: row.logo_domain ?? undefined,
     description: row.description,
     howToClaim: row.how_to_claim,
     terms: row.terms,

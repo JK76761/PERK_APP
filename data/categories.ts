@@ -5,6 +5,7 @@ export type CategoryIcon =
   | 'student'
   | 'tech'
   | 'ai-tools'
+  | 'research'
   | 'shopping'
   | 'travel'
   | 'subscriptions';
@@ -23,6 +24,7 @@ export type CategoryId =
   | 'student-deals'
   | 'tech'
   | 'ai-tools'
+  | 'research-rewards'
   | 'shopping'
   | 'travel'
   | 'subscriptions';
@@ -64,6 +66,12 @@ export const categories: Category[] = [
     label: 'AI Tools',
     icon: 'ai-tools',
     tone: 'yellow',
+  },
+  {
+    id: 'research-rewards',
+    label: 'Research & Rewards',
+    icon: 'research',
+    tone: 'green',
   },
   {
     id: 'shopping',

@@ -10,12 +10,12 @@ import { radius } from '@/constants/radius';
 import { clampSize } from '@/constants/spacing';
 import { shadows } from '@/constants/shadows';
 import { fontWeights } from '@/constants/typography';
-import type { BadgeTone, Perk } from '@/data/perks';
 import { useSavedPerks } from '@/state/SavedPerksContext';
+import type { BadgeTone, Perk } from '@/types/perk';
 
 const { width } = Dimensions.get('window');
 const cardHeight = clampSize(width, 82, 90, 0.222);
-const logoSize = clampSize(width, 46, 50, 0.126);
+const logoSize = clampSize(width, 44, 44, 0.114);
 const titleSize = clampSize(width, 15, 16, 0.039);
 const bodySize = clampSize(width, 14, 15, 0.038);
 const badgeSize = clampSize(width, 12, 13, 0.032);
@@ -98,7 +98,13 @@ export function PerkCard({ perk, onPress }: PerkCardProps) {
 
   return (
     <AnimatedScalePressable onPress={onPress} contentStyle={styles.card} scaleTo={0.988}>
-      <BrandLogo company={perk.company} logoKey={perk.logoKey} size={logoSize} variant="card" />
+      <BrandLogo
+        company={perk.company}
+        logoKey={perk.logoKey}
+        logoDomain={perk.logoDomain}
+        size={logoSize}
+        variant="card"
+      />
 
       <View style={styles.content}>
         {perk.company ? <Text style={styles.eyebrow}>{perk.company}</Text> : null}
@@ -159,6 +165,7 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 4,
     justifyContent: 'center',
+    minWidth: 0,
   },
   eyebrow: {
     color: colors.textSoft,
@@ -166,6 +173,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     letterSpacing: -0.3,
     lineHeight: bodySize + 2,
+    flexShrink: 1,
   },
   title: {
     color: colors.text,
@@ -206,6 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 0,
   },
   bookmarkCircle: {
     width: bookmarkSize,
